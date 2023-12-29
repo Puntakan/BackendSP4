@@ -6,7 +6,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import sit.int221.dtos.CreateAndUpdateAnnouncementDTO;
 import sit.int221.entities.Announcement;
 import sit.int221.entities.Category;
@@ -18,9 +20,7 @@ import sit.int221.utils.AnnouncementDisplay;
 import sit.int221.utils.UserRole;
 
 import java.time.ZonedDateTime;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -62,16 +62,12 @@ public class AnnouncementService {
     }
 
     public Announcement getAnnouncement(Integer announcementId, Boolean viewCount, String authorizationHeader) {
-        // Your existing code to retrieve the announcement
-        Announcement announcement = announcementRepository.findById(announcementId)
-                .orElseThrow(() -> new AnnouncementNotFoundException(announcementId));
+        Announcement announcement = announcementRepository.findById(announcementId).orElseThrow(() -> new AnnouncementNotFoundException(announcementId));
 
-        // Check authorizationHeader
         if (authorizationHeader != null) {
             String jwt = authorizationHeader.substring(7);
             UserRole role = UserRole.valueOf(jwtService.extractRole(jwt));
 
-            // Check role and ownership for announcer
             if (role.equals(UserRole.announcer)) {
                 User user = userService.getUserByAuthorizationHeader(authorizationHeader);
                 if (!Objects.equals(announcement.getAnnouncementOwner().getId(), user.getId())) {
@@ -79,20 +75,13 @@ public class AnnouncementService {
                 }
             }
         } else {
-            // Increment viewCount if viewCount is true
             if (viewCount != null && viewCount) {
-                incrementAnnounceView(announcement);
+                announcement.setViewCount(announcement.getViewCount() + 1);
+                return announcementRepository.saveAndFlush(announcement);
             }
         }
 
-
-        // Return the announcement
         return announcement;
-    }
-
-    private void incrementAnnounceView(Announcement announce) {
-        announce.setViewCount(announce.getViewCount() + 1);
-        announcementRepository.saveAndFlush(announce);
     }
 
     public Announcement createAnnouncement(CreateAndUpdateAnnouncementDTO announcement, String authorizationHeader) {
@@ -156,5 +145,14 @@ public class AnnouncementService {
                 return announcementRepository.findAllByCategory_Id(categoryId, pageable);
             }
         }
+    }
+    public List<Announcement> getViewerAllAnnouncement() {
+        List<Announcement> announces = announcementRepository.findAll(Sort.by(Sort.Direction.DESC, "publishDate", "closeDate"));
+        return announces;
+    }
+
+    public Announcement getViewerIdAnnounce(Integer id) {
+        return announcementRepository.findById(id).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND, "Announcement id" + id + " does not exist!!!"));
     }
 }
