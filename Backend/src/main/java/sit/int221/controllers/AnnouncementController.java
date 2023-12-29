@@ -1,158 +1,91 @@
-package sit.int221.services;
+package sit.int221.controllers;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
-import sit.int221.dtos.CreateAndUpdateAnnouncementDTO;
+import org.springframework.core.MethodParameter;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.*;
+import sit.int221.dtos.*;
 import sit.int221.entities.Announcement;
-import sit.int221.entities.Category;
-import sit.int221.entities.User;
-import sit.int221.exceptions.AnnouncementForbidden;
-import sit.int221.exceptions.AnnouncementNotFoundException;
-import sit.int221.repositories.AnnouncementRepository;
-import sit.int221.utils.AnnouncementDisplay;
-import sit.int221.utils.UserRole;
+import sit.int221.services.AnnouncementService;
+import sit.int221.utils.ListMapper;
 
-import java.time.ZonedDateTime;
-import java.util.*;
+import java.util.List;
+import java.util.stream.Collectors;
 
-@Service
+@RestController
+@RequestMapping("/api/announcements")
+@CrossOrigin
 @RequiredArgsConstructor
-public class AnnouncementService {
-    private final AnnouncementRepository announcementRepository;
-    private final CategoryService categoryService;
-    private final JwtService jwtService;
-    private final UserService userService;
+public class AnnouncementController {
+    private final AnnouncementService announcementService;
     private final ModelMapper modelMapper;
+    private final ListMapper listMapper;
 
-    public List<Announcement> getAllAnnouncement(String mode, String authorizationHeader) {
-        if (authorizationHeader == null) {
-            if (Objects.equals(mode, "active")) {
-                List<Announcement> activeAnnouncements = announcementRepository.getActiveAnnouncements(AnnouncementDisplay.Y, ZonedDateTime.now());
-                activeAnnouncements.sort(Comparator.comparing(Announcement::getId).reversed());
-                return activeAnnouncements;
-            } else if (Objects.equals(mode, "close")){
-                List<Announcement> closeAnnouncements = announcementRepository.findAllByCloseDateIsNotNullAndAnnouncementDisplayEqualsAndCloseDateBefore(AnnouncementDisplay.Y, ZonedDateTime.now());
-                closeAnnouncements.sort(Comparator.comparing(Announcement::getId).reversed());
-                return closeAnnouncements;
-            }
-        } else {
-            String jwt = authorizationHeader.substring(7);
-            UserRole role = UserRole.valueOf(jwtService.extractRole(jwt));
-            Integer userId = jwtService.extractUserId(jwt);
+    @GetMapping("")
+    public List<AnnouncementDTO> getAllAnnouncement(@RequestParam(required = false) String mode,
+                                                    @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
+        List<Announcement> announcements = announcementService.getAllAnnouncement(mode, authorizationHeader);
+        List<AnnouncementDTO> announcementDTOs = announcements.stream()
+                .map(announcement -> modelMapper.map(announcement, AnnouncementDTO.class))
+                .collect(Collectors.toList());
 
-            if (role.equals(UserRole.admin)) {
-                Sort sort = Sort.by(Sort.Direction.DESC, "id");
-                return announcementRepository.findAll(sort);
-            } else {
-                User user = userService.getUser(userId);
-                List<Announcement> announcements = announcementRepository.findAllByAnnouncementOwner(user);
-                announcements.sort(Comparator.comparing(Announcement::getId).reversed());
-                return announcements;
-            }
+        return announcementDTOs;
+    }
+
+    @GetMapping("/{id}")
+    public AnnouncementDTO getAnnouncement(@PathVariable Integer id,
+                                           @RequestParam(required = false) Boolean count,
+                                           @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
+        Announcement announcement = announcementService.getAnnouncement(id, count, authorizationHeader);
+        return modelMapper.map(announcement, AnnouncementDTO.class);
+    }
+
+    @PostMapping("")
+    public CreateAndUpdateAnnouncementResponseDTO createAnnouncement(@Valid @RequestBody CreateAndUpdateAnnouncementDTO newAnnouncement,
+                                                                     @RequestHeader(value = "Authorization") String authorizationHeader,
+                                                                     BindingResult bindingResult) throws MethodArgumentNotValidException {
+        if (bindingResult.hasErrors()) {
+            throw new MethodArgumentNotValidException((MethodParameter) null, bindingResult);
         }
 
-        return null;
+        Announcement announcement = announcementService.createAnnouncement(newAnnouncement, authorizationHeader);
+        return modelMapper.map(announcement, CreateAndUpdateAnnouncementResponseDTO.class);
     }
 
-    public Announcement getAnnouncement(Integer announcementId, Boolean viewCount, String authorizationHeader) {
-        Announcement announcement = announcementRepository.findById(announcementId).orElseThrow(() -> new AnnouncementNotFoundException(announcementId));
-
-        if (authorizationHeader != null) {
-            String jwt = authorizationHeader.substring(7);
-            UserRole role = UserRole.valueOf(jwtService.extractRole(jwt));
-
-            if (role.equals(UserRole.announcer)) {
-                User user = userService.getUserByAuthorizationHeader(authorizationHeader);
-                if (!Objects.equals(announcement.getAnnouncementOwner().getId(), user.getId())) {
-                    throw new AnnouncementForbidden("You are not the owner of this announcement");
-                }
-            }
-        } else {
-            if (viewCount != null && viewCount) {
-                announcement.setViewCount(announcement.getViewCount() + 1);
-                return announcementRepository.saveAndFlush(announcement);
-            }
+    @PutMapping("/{id}")
+    public CreateAndUpdateAnnouncementResponseDTO updateAnnouncement(@PathVariable Integer id,
+                                                                     @Valid @RequestBody CreateAndUpdateAnnouncementDTO newAnnouncement,
+                                                                     @RequestHeader(value = "Authorization") String authorizationHeader,
+                                                                     BindingResult bindingResult) throws MethodArgumentNotValidException {
+        if (bindingResult.hasErrors()) {
+            throw new MethodArgumentNotValidException((MethodParameter) null, bindingResult);
         }
 
-        return announcement;
+        Announcement announcement = announcementService.updateAnnouncement(id, newAnnouncement, authorizationHeader);
+        return modelMapper.map(announcement, CreateAndUpdateAnnouncementResponseDTO.class);
     }
 
-    public Announcement createAnnouncement(CreateAndUpdateAnnouncementDTO announcement, String authorizationHeader) {
-        Category category = categoryService.getCategory(announcement.getCategoryId());
-        User user = userService.getUserByAuthorizationHeader(authorizationHeader);
-        Announcement newAnnouncement = modelMapper.map(announcement, Announcement.class);
-        newAnnouncement.setCategory(category);
-        newAnnouncement.setViewCount(0);
-        newAnnouncement.setAnnouncementOwner(user);
-        return announcementRepository.saveAndFlush(newAnnouncement);
+    @DeleteMapping("/{id}")
+    public void deleteAnnouncement(@PathVariable Integer id, @RequestHeader(value = "Authorization") String authorizationHeader) {
+        announcementService.deleteAnnouncement(id, authorizationHeader);
     }
 
-    public Announcement updateAnnouncement(Integer announcementId, CreateAndUpdateAnnouncementDTO announcement, String authorizationHeader) {
-        User user = userService.getUserByAuthorizationHeader(authorizationHeader);
-        Announcement oldAnnouncement = announcementRepository.findById(announcementId).orElseThrow(() -> new AnnouncementNotFoundException(announcementId));
+    @GetMapping("/viewer")
+    public List<AnnouncementDTO> getViewerAllAnnouncement() {
+        List<Announcement> announcements = announcementService.getViewerAllAnnouncement();
+        List<AnnouncementDTO> announcementDTOs = announcements.stream()
+                .map(announcement -> modelMapper.map(announcement, AnnouncementDTO.class))
+                .collect(Collectors.toList());
 
-        if (!Objects.equals(oldAnnouncement.getAnnouncementOwner().getId(), user.getId()) && !Objects.equals(user.getRole(), UserRole.admin)) {
-            throw new AnnouncementForbidden("You are not the owner of this announcement");
-        }
-
-        Category category = categoryService.getCategory(announcement.getCategoryId());
-        oldAnnouncement.setAnnouncementTitle(announcement.getAnnouncementTitle());
-        oldAnnouncement.setAnnouncementDescription(announcement.getAnnouncementDescription());
-        oldAnnouncement.setCategory(category);
-        oldAnnouncement.setPublishDate(announcement.getPublishDate());
-        oldAnnouncement.setCloseDate(announcement.getCloseDate());
-        oldAnnouncement.setAnnouncementDisplay(announcement.getAnnouncementDisplay());
-        return announcementRepository.saveAndFlush(oldAnnouncement);
+        return announcementDTOs;
     }
 
-    public void deleteAnnouncement(Integer announcementId, String authorizationHeader) {
-        User user = userService.getUserByAuthorizationHeader(authorizationHeader);
-        Announcement announcement = announcementRepository.findById(announcementId).orElseThrow(() -> new AnnouncementNotFoundException(announcementId));
-
-        if (!Objects.equals(announcement.getAnnouncementOwner().getId(), user.getId()) && !Objects.equals(user.getRole(), UserRole.admin)) {
-            throw new AnnouncementForbidden("You are not the owner of this announcement");
-        }
-
-        announcementRepository.delete(announcement);
+    @GetMapping("/viewer/{id}")
+    public AnnouncementDTO getViewerIdAnnounce(@PathVariable Integer id){
+        return modelMapper.map(announcementService.getViewerIdAnnounce(id), AnnouncementDTO.class);
     }
 
-    public Page<Announcement> getAnnouncementsByPage(String mode, Integer page, Integer size, Integer categoryId) {
-        Sort sort = Sort.by(Sort.Direction.DESC, "id");
-        Pageable pageable = PageRequest.of(page, size, sort);
-        ZonedDateTime currentTime = ZonedDateTime.now();
-
-        if (categoryId == 0) {
-            if (Objects.equals(mode, "active")) {
-                return announcementRepository.getActiveAnnouncementsPage(AnnouncementDisplay.Y, currentTime, pageable);
-            } else if (Objects.equals(mode, "close")) {
-                return announcementRepository.findAllByCloseDateIsNotNullAndAnnouncementDisplayEqualsAndCloseDateBefore(AnnouncementDisplay.Y, currentTime, pageable);
-            } else {
-                return announcementRepository.findAll(pageable);
-            }
-        } else {
-            if (Objects.equals(mode, "active")) {
-                return announcementRepository.getActiveAnnouncementsPageWithCategoryId(AnnouncementDisplay.Y, currentTime, categoryId, pageable);
-            } else if (Objects.equals(mode, "close")) {
-                return announcementRepository.findAllByCloseDateIsNotNullAndAnnouncementDisplayEqualsAndCloseDateBeforeAndCategory_Id(AnnouncementDisplay.Y, currentTime, categoryId, pageable);
-            } else {
-                return announcementRepository.findAllByCategory_Id(categoryId, pageable);
-            }
-        }
-    }
-    public List<Announcement> getViewerAllAnnouncement() {
-        List<Announcement> announces = announcementRepository.findAll(Sort.by(Sort.Direction.DESC, "publishDate", "closeDate"));
-        return announces;
-    }
-
-    public Announcement getViewerIdAnnounce(Integer id) {
-        return announcementRepository.findById(id).orElseThrow(() ->
-                new ResponseStatusException(HttpStatus.NOT_FOUND, "Announcement id" + id + " does not exist!!!"));
-    }
 }
