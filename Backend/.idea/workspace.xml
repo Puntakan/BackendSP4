@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="afeaa524-5832-4fce-b825-a0017fa6eaf2" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/sit/int221/services/AnnouncementService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/sit/int221/services/AnnouncementService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/sit/int221/controllers/AnnouncementController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/sit/int221/controllers/AnnouncementController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/sit/int221/controllers/AuthenticationController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/sit/int221/controllers/AuthenticationController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/sit/int221/controllers/CategoryController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/sit/int221/controllers/CategoryController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/sit/int221/controllers/UserController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/sit/int221/controllers/UserController.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/sit/int221/services/AnnouncementService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/sit/int221/services/AnnouncementService.class" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectId" id="2Zfv3paTHMZJACYfflJlPVJwan0" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RequestMappingsPanelOrder0": "0",
+    "RequestMappingsPanelOrder1": "1",
+    "RequestMappingsPanelWidth0": "75",
+    "RequestMappingsPanelWidth1": "75",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "last_opened_file_path": "C:/Users/Puntakan/Downloads/OR1-SPRINT4-main/Backend",
+    "spring.configuration.checksum": "7adc43ab7f6e065da10c6642ba6765c9"
+  },
+  "keyToStringList": {
+    "DatabaseDriversLRU": [
+      "mysql"
+    ]
+  }
+}]]></component>
+  <component name="RunManager">
+    <configuration name="Int221Application" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+      <module name="INT222-Backend" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="sit.int221.Int221Application" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="afeaa524-5832-4fce-b825-a0017fa6eaf2" name="Changes" comment="" />
+      <created>1702825751494</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1702825751494</updated>
+      <workItem from="1702825752951" duration="3503000" />
+      <workItem from="1703765860987" duration="16344000" />
+      <workItem from="1703861445070" duration="668000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>
